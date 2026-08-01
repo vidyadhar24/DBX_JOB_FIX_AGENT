@@ -59,14 +59,15 @@ app = workflow.compile()
 # RUNNING THE APP
 # ==========================================
 if __name__ == "__main__":
-    # A simple, fake PySpark error for testing
-    sample_error = "AnalysisException: Column 'usr_id' does not exist. Did you mean one of the following? [user_id, name, age]"
+    from fixtures import SPARK_ERRORS
     
-    print("Starting the Agentic Workflow...\n")
+    print("Starting the Agentic Workflow against test fixtures...\n")
     
-    # We pass the initial clipboard (containing only the error log) into the graph
-    result = app.invoke({"error_log": sample_error})
+    # We will test the schema mismatch error as our baseline
+    test_log = SPARK_ERRORS["schema_mismatch"]
+    
+    # Pass the chosen fixture into the graph
+    result = app.invoke({"error_log": test_log})
     
     print("\n--- Final Diagnosis ---")
-    # We print the diagnosis that the node added to the clipboard
     print(result["diagnosis"])
