@@ -4,56 +4,64 @@ from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from langchain_groq import ChatGroq
 
-# 1. Load Secrets
 load_dotenv()
 
 # ==========================================
-# CONCEPT 1: THE STATE (The Clipboard)
+# 1. THE STATE (Updated Clipboard)
 # ==========================================
-# We define what variables our clipboard will hold.
 class AgentState(TypedDict):
     error_log: str
     diagnosis: str
+    suggested_fix: str  # <-- NEW: We made room for the code fix!
 
 # ==========================================
-# CONCEPT 2: THE NODE (The Worker)
+# 2. THE NODES (The Workers)
 # ==========================================
-# This function reads the error_log from the state, asks Groq to fix it, 
-# and returns the new diagnosis to update the state.
 def diagnose_error(state: AgentState):
-    print("--- Node: Diagnosing Error... ---")
+    print("--- Node 1: Diagnosing Error... ---")
+    llm = ChatGroq(
+        api_key=os.getenv("GROQ_API_KEY"),
+        model_name=os.getenv("MODEL_NAME")
+    )
+    prompt = f"You are a Databricks expert. Briefly diagnose this PySpark error and explain why it happened:\n\n{state['error_log']}"
     
-    # Initialize our LLM just like we did in the test script
+    response = llm.invoke(prompt)
+    return {"diagnosis": response.content}
+
+
+# NEW: The Code Fix Node
+def suggest_fix(state: AgentState):
+    print("--- Node 2: Generating Code Fix... ---")
     llm = ChatGroq(
         api_key=os.getenv("GROQ_API_KEY"),
         model_name=os.getenv("MODEL_NAME")
     )
     
-    # Give the AI its persona and the specific error log
-    prompt = f"You are a Databricks expert. Briefly diagnose this PySpark error and explain why it happened:\n\n{state['error_log']}"
+    # We pass both the original error AND the diagnosis to ground the AI's fix
+    prompt = f"""You are a Databricks expert. 
+    Here is a PySpark error: {state['error_log']}
+    Here is the diagnosis: {state['diagnosis']}
     
-    # Get the answer from Groq
+    Provide a concrete PySpark code fix for this issue. Format your answer as a clear code snippet. Do not include a lengthy explanation, just the code and a brief comment."""
+    
     response = llm.invoke(prompt)
-    
-    # Return the new information to be added to our clipboard (State)
-    return {"diagnosis": response.content}
+    return {"suggested_fix": response.content}
 
 # ==========================================
-# CONCEPT 3: THE GRAPH (The Conveyor Belt)
+# 3. THE GRAPH (Updated Conveyor Belt)
 # ==========================================
-# Initialize the graph and give it our State blueprint
 workflow = StateGraph(AgentState)
 
-# Add our worker node to the factory floor
+# Add both workers to the factory floor
 workflow.add_node("diagnose", diagnose_error)
+workflow.add_node("suggest_fix", suggest_fix)
 
-# Define the sequence: START -> diagnose -> END
+# Define the sequence: START -> Node 1 -> Node 2 -> END
 workflow.add_edge(START, "diagnose")
-workflow.add_edge("diagnose", END)
+workflow.add_edge("diagnose", "suggest_fix")  # <-- NEW: Passing the baton from Node 1 to Node 2
+workflow.add_edge("suggest_fix", END)
 
-# Compile it into a working application
 app = workflow.compile()
-
 
 # ==========================================
 # RUNNING THE APP
@@ -61,13 +69,16 @@ app = workflow.compile()
 if __name__ == "__main__":
     from fixtures import SPARK_ERRORS
     
-    print("Starting the Agentic Workflow against test fixtures...\n")
+    print("Starting Phase 2 Agentic Workflow...\n")
     
-    # We will test the schema mismatch error as our baseline
+    # Testing against our schema mismatch dummy data
     test_log = SPARK_ERRORS["schema_mismatch"]
     
-    # Pass the chosen fixture into the graph
+    # Pass the initial clipboard into the graph
     result = app.invoke({"error_log": test_log})
     
     print("\n--- Final Diagnosis ---")
     print(result["diagnosis"])
+    
+    print("\n--- Suggested PySpark Fix ---")
+    print(result["suggested_fix"])
