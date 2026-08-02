@@ -1,0 +1,7 @@
+Engineered an Agentic AI diagnostic tool using LangGraph and Groq (Llama 3) to automatically fetch, analyze, and resolve failed PySpark jobs via the Databricks REST API.
+
+
+Designed a privacy-first Retrieval-Augmented Generation (RAG) architecture by deploying a local Hugging Face embedding model and ChromaDB vector database, ensuring zero data retention for sensitive enterprise logs.
+
+
+Developed and deployed a full-stack web application using Streamlit Community Cloud, featuring a state-aware UI to present root-cause analyses and contextual code fixes to end users.
