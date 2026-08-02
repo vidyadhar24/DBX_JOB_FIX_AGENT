@@ -119,6 +119,18 @@ def suggest_fix(state: AgentState):
     response = llm.invoke(prompt)
     return {"suggested_fix": response.content}
 
+# NEW DECISION MAKER: The Traffic Cop
+def route_after_fetch(state: AgentState) -> str:
+    # Check if the API fetcher threw an error
+    if state["error_log"].startswith("API Request Failed"):
+        print("--- ROUTING: API Failed. Bypassing LLM nodes. ---")
+        return "end_early"
+    
+    # Otherwise, continue down the assembly line
+    print("--- ROUTING: Log successfully fetched. Proceeding to process further. ---")
+    return "continue_to_rag"
+
+
 # ==========================================
 # 3. THE GRAPH (Updated Conveyor Belt)
 # ==========================================
@@ -132,7 +144,16 @@ workflow.add_node("suggest_fix", suggest_fix)
 
 # Define the new sequence: START -> Fetcher -> Librarian -> Diagnoser -> Coder -> END
 workflow.add_edge(START, "fetch_run_logs")
-workflow.add_edge("fetch_run_logs", "retrieve_context")
+
+workflow.add_conditional_edges(
+    "fetch_run_logs",   # The node we are coming from
+    route_after_fetch,  # The traffic cop function we just built
+    {
+        "continue_to_rag": "retrieve_context", # If successful, go to Node 1
+        "end_early": END                       # If failed, skip to END
+    }
+)
+
 workflow.add_edge("retrieve_context", "diagnose")
 workflow.add_edge("diagnose", "suggest_fix")
 workflow.add_edge("suggest_fix", END)

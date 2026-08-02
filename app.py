@@ -71,6 +71,17 @@ if st.session_state.theme == "Light":
             color: #219ebc !important; 
         }
         }
+        /* FIX: Ensure warning/alert ribbons are highly visible */
+        div[data-testid="stAlert"] { 
+            background-color: #ffb703 !important; 
+            border: none !important;
+            border-radius: 8px !important;
+        }
+        div[data-testid="stAlert"], 
+        div[data-testid="stAlert"] * { 
+            color: #023047 !important; 
+            font-weight: bold !important; 
+        }
     </style>
     """
 else:
@@ -94,6 +105,17 @@ else:
         /* Ensure tab text is visible in dark mode */
         .stTabs [data-baseweb="tab-list"] button { color: #8ecae6; }
         .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] { color: #ffb703; }
+        /* FIX: Ensure warning/alert ribbons are highly visible */
+        div[data-testid="stAlert"] { 
+            background-color: #ffb703 !important; 
+            border: none !important;
+            border-radius: 8px !important;
+        }
+        div[data-testid="stAlert"], 
+        div[data-testid="stAlert"] * { 
+            color: #023047 !important; 
+            font-weight: bold !important; 
+        }
     </style>
     """
 
