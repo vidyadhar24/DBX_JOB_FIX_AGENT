@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 # 0. LOAD SECRETS AND SET RULES FIRST!
 # ==========================================
 load_dotenv()
-os.environ["HF_HUB_OFFLINE"] = "1" 
+os.environ["HF_HUB_OFFLINE"] = os.getenv("HF_HUB_OFFLINE", "0")
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1" 
 
 from typing import TypedDict
