@@ -460,6 +460,7 @@ dependencies = [
     { name = "langchain-huggingface" },
     { name = "langgraph" },
     { name = "python-dotenv" },
+    { name = "requests" },
     { name = "sentence-transformers" },
     { name = "streamlit" },
 ]
@@ -472,6 +473,7 @@ requires-dist = [
     { name = "langchain-huggingface", specifier = ">=1.2.2" },
     { name = "langgraph", specifier = ">=1.2.10" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
+    { name = "requests", specifier = ">=2.34.2" },
     { name = "sentence-transformers", specifier = ">=5.6.1" },
     { name = "streamlit", specifier = ">=1.60.0" },
 ]
